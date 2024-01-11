@@ -1,0 +1,10 @@
+syntax = "proto3";
+package proto;
+
+option go_package = "github.com/yuan-attrove/rules_pkg_810/proto";
+
+import "google/protobuf/timestamp.proto";
+
+message MyMessage {
+  google.protobuf.Timestamp my_time = 1;
+}

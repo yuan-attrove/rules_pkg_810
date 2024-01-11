@@ -1,0 +1,56 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+load("@aspect_bazel_lib//lib:expand_template.bzl", "expand_template")
+load("@bazel_gazelle//:def.bzl", "gazelle")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library")
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push", "oci_tarball")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
+# gazelle:prefix github.com/yuan-attrove/rules_pkg_810
+# gazelle:proto package
+# gazelle:proto_group go_package
+gazelle(name = "gazelle")
+
+go_library(
+    name = "server_lib",
+    srcs = ["main.go"],
+    importpath = "github.com/yuan-attrove/rules_pkg_810",
+    visibility = ["//visibility:private"],
+    deps = [
+        ":proto_go_proto",
+    ],
+)
+
+go_binary(
+    name = "server",
+    embed = [":server_lib"],
+    visibility = ["//visibility:public"],
+)
+
+pkg_tar(
+    name = "server-tar",
+    srcs = [":server"],
+    include_runfiles = True,
+)
+
+oci_image(
+    name = "server-image",
+    base = "@distroless_base",
+    entrypoint = ["/server"],
+    tars = [":server-tar"],
+)
+
+proto_library(
+    name = "proto_proto",
+    srcs = ["my.proto"],
+    visibility = ["//visibility:public"],
+    deps = ["@com_google_protobuf//:timestamp_proto"],
+)
+
+go_proto_library(
+    name = "proto_go_proto",
+    importpath = "github.com/yuan-attrove/rules_pkg_810/proto",
+    proto = ":proto_proto",
+    visibility = ["//visibility:public"],
+)
